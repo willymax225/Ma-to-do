@@ -125,9 +125,21 @@ function render(){
  $('bar').style.width=pct+'%';
  $('percent').textContent=pct+' % terminé';
  const list=$('list');list.replaceChildren();
- const cat=$('catFilter').value, status=$('statusFilter').value;
- const shown=tasks.filter(t=>(cat==='Toutes'||t.category===cat)&&
- (status==='Toutes'||(status==='À faire'&&!t.done)||(status==='Terminées'&&t.done)));
+const cat=$('catFilter').value, status=$('statusFilter').value, day=$('dayFilter').value;
+const today=new Date();
+today.setHours(0,0,0,0);
+const tomorrow=new Date(today);
+tomorrow.setDate(tomorrow.getDate()+1);
+const shown=tasks.filter(t=>{
+const date=t.date?new Date(t.date+'T00:00:00'):null;
+const dayOK=day==='Toutes les dates'||
+(day==="Aujourd'hui"&&date&&date.getTime()===today.getTime())||
+(day==='Demain'&&date&&date.getTime()===tomorrow.getTime())||
+(day==='À venir'&&date&&date.getTime()>today.getTime())||
+(day==='Sans date'&&!t.date);
+return dayOK&&(cat==='Toutes'||t.category===cat)&&
+(status==='Toutes'||(status==='À faire'&&!t.done)||(status==='Terminées'&&t.done));
+}); 
  if(!shown.length){
   const p=document.createElement('p');p.className='empty';
   p.textContent=tasks.length?'Aucune tâche pour ce filtre.':'Aucune tâche pour le moment.';
@@ -161,6 +173,7 @@ $('form').addEventListener('submit',e=>{
  save();$('name').value='';$('date').value='';$('time').value='';$('category').value='Personnel';render();
 });
 $('catFilter').addEventListener('change',render);
+ $('dayFilter').addEventListener('change',render);
 $('statusFilter').addEventListener('change',render);
 $('clear').addEventListener('click',()=>{tasks=tasks.filter(t=>!t.done);save();render()});
 render();
