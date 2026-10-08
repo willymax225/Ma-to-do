@@ -173,8 +173,9 @@ $('form').addEventListener('submit',e=>{
  save();$('name').value='';$('date').value='';$('time').value='';$('category').value='Personnel';render();
 });
 $('catFilter').addEventListener('change',render);
+ $('statusFilter').addEventListener('change',render)
  $('dayFilter').addEventListener('change',render);
-$('statusFilter').addEventListener('change',render);
+
 $('clear').addEventListener('click',()=>{tasks=tasks.filter(t=>!t.done);save();render()});
 render();
 </script>
