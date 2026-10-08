@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6C63FF">
+  <title>Ma To-Do</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px 16px;
+      font-family: Arial, sans-serif;
+      background: #f5f5ff; color: #25243a;
+    }
+    main { max-width: 520px; margin: auto; }
+    h1 { color: #6c63ff; margin-bottom: 6px; }
+    .subtitle { color: #777; margin-top: 0; }
+    .panel {
+      background: white; padding: 20px;
+      border-radius: 18px; margin-top: 20px;
+      box-shadow: 0 4px 18px #24204a10;
+    }
+    form { display: flex; gap: 8px; }
+    input {
+      min-width: 0; flex: 1; padding: 13px;
+      border: 1px solid #ddd; border-radius: 10px;
+      font-size: 16px;
+    }
+    button {
+      border: 0; border-radius: 10px; padding: 12px;
+      background: #6c63ff; color: white;
+      font-size: 15px; cursor: pointer;
+    }
+    .stats { color: #666; margin: 18px 0 0; }
+    ul { padding: 0; list-style: none; }
+    li {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 0; border-bottom: 1px solid #eee;
+    }
+    li span { flex: 1; overflow-wrap: anywhere; }
+    li.done span { text-decoration: line-through; color: #999; }
+    li input { flex: none; width: 20px; height: 20px; }
+    .delete { background: #ffe9e9; color: #b42323; }
+    .empty { color: #888; text-align: center; padding: 20px 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>✨ Ma To-Do</h1>
+    <p class="subtitle">Organise tes journées, une tâche à la fois.</p>
+    <section class="panel">
+      <h2>Mes tâches</h2>
+      <form id="taskForm">
+        <input id="taskInput" placeholder="Ex. Faire les courses..." required>
+        <button type="submit">Ajouter</button>
+      </form>
+      <p class="stats" id="stats">0 tâche</p>
+      <ul id="taskList"></ul>
+      <button id="clearDone" type="button" class="delete">Supprimer les tâches terminées</button>
+    </section>
+  </main>
+  <script>
+    const form = document.getElementById('taskForm');
+    const input = document.getElementById('taskInput');
+    const list = document.getElementById('taskList');
+    const stats = document.getElementById('stats');
+    let tasks = [];
+    try {
+      tasks = JSON.parse(localStorage.getItem('ma-todo-tasks') || '[]');
+      if (!Array.isArray(tasks)) tasks = [];
+    } catch (e) { tasks = []; }
+
+    function save() {
+      try { localStorage.setItem('ma-todo-tasks', JSON.stringify(tasks)); }
+      catch (e) {}
+    }
+
+    function render() {
+      list.replaceChildren();
+      const remaining = tasks.filter(t => !t.done).length;
+      stats.textContent = remaining + ' tâche(s) restante(s) · ' +
+        tasks.length + ' au total';
+
+      if (tasks.length === 0) {
+        const message = document.createElement('li');
+        message.className = 'empty';
+        message.textContent = 'Aucune tâche pour le moment. Ajoute la première !';
+        list.appendChild(message);
+      }
+
+      tasks.forEach(task => {
+        const item = document.createElement('li');
+        if (task.done) item.classList.add('done');
+
+        const check = document.createElement('input');
+        check.type = 'checkbox';
+        check.checked = task.done;
+        check.setAttribute('aria-label', 'Marquer comme terminée');
+        check.addEventListener('change', () => {
+          task.done = check.checked;
+          save();
+          render();
+        });
+
+        const label = document.createElement('span');
+        label.textContent = task.text;
+
+        const remove = document.createElement('button');
+        remove.textContent = 'Supprimer';
+        remove.className = 'delete';
+        remove.type = 'button';
+        remove.addEventListener('click', () => {
+          tasks = tasks.filter(t => t.id !== task.id);
+          save();
+          render();
+        });
+
+        item.append(check, label, remove);
+        list.appendChild(item);
+      });
+    }
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      tasks.push({ id: Date.now() + Math.random(), text, done: false });
+      save();
+      input.value = '';
+      render();
+      input.focus();
+    });
+
+    document.getElementById('clearDone').addEventListener('click', () => {
+      tasks = tasks.filter(t => !t.done);
+      save();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
