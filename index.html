@@ -2,143 +2,160 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#6C63FF">
-  <title>Ma To-Do</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 24px 16px;
-      font-family: Arial, sans-serif;
-      background: #f5f5ff; color: #25243a;
-    }
-    main { max-width: 520px; margin: auto; }
-    h1 { color: #6c63ff; margin-bottom: 6px; }
-    .subtitle { color: #777; margin-top: 0; }
-    .panel {
-      background: white; padding: 20px;
-      border-radius: 18px; margin-top: 20px;
-      box-shadow: 0 4px 18px #24204a10;
-    }
-    form { display: flex; gap: 8px; }
-    input {
-      min-width: 0; flex: 1; padding: 13px;
-      border: 1px solid #ddd; border-radius: 10px;
-      font-size: 16px;
-    }
-    button {
-      border: 0; border-radius: 10px; padding: 12px;
-      background: #6c63ff; color: white;
-      font-size: 15px; cursor: pointer;
-    }
-    .stats { color: #666; margin: 18px 0 0; }
-    ul { padding: 0; list-style: none; }
-    li {
-      display: flex; align-items: center; gap: 10px;
-      padding: 13px 0; border-bottom: 1px solid #eee;
-    }
-    li span { flex: 1; overflow-wrap: anywhere; }
-    li.done span { text-decoration: line-through; color: #999; }
-    li input { flex: none; width: 20px; height: 20px; }
-    .delete { background: #ffe9e9; color: #b42323; }
-    .empty { color: #888; text-align: center; padding: 20px 0; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#6c63ff">
+<title>Ma To-Do</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px 14px;font-family:Arial,sans-serif;background:#f5f4ff;color:#292741}
+main{max-width:650px;margin:auto}
+h1{color:#6c63ff}
+.panel{background:white;padding:17px;border-radius:18px;margin:17px 0;box-shadow:0 4px 18px #24204a0b}
+.muted{color:#777}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:#f1efff;padding:12px 5px;text-align:center;border-radius:12px}
+.stat strong{display:block;font-size:23px;color:#6c63ff}
+.stat span{font-size:12px;color:#666}
+.track{height:9px;background:#e5e1ff;border-radius:20px;margin:12px 0;overflow:hidden}
+#bar{height:100%;width:0;background:#6c63ff}
+label{display:block;font-size:14px;font-weight:bold;margin:12px 0 6px}
+input,select{width:100%;min-width:0;padding:12px;border:1px solid #ddd;border-radius:10px;background:white;font-size:15px}
+button{border:0;border-radius:10px;padding:12px;background:#6c63ff;color:white;font-size:14px}
+form button{width:100%;margin-top:14px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.filters{display:flex;gap:8px;margin:12px 0}
+.filters select{flex:1;width:50%}
+.task{border:1px solid #eee;border-radius:12px;padding:12px;margin:10px 0}
+.top{display:flex;align-items:center;gap:10px}
+.top input{width:20px;height:20px;flex:none}
+.taskname{flex:1;overflow-wrap:anywhere;font-weight:bold}
+.done .taskname{text-decoration:line-through;color:#999}
+.tag{display:inline-block;background:#f0edff;color:#5549cc;border-radius:20px;padding:5px 9px;font-size:12px;margin-top:8px}
+.meta{font-size:13px;color:#777;margin-top:8px}
+.delete{background:#ffeded;color:#a32b2b;margin-top:10px}
+.empty{text-align:center;color:#888;padding:16px}
+@media(max-width:370px){.fields{grid-template-columns:1fr}.stats span{font-size:11px}}
+</style>
 </head>
 <body>
-  <main>
-    <h1>✨ Ma To-Do</h1>
-    <p class="subtitle">Organise tes journées, une tâche à la fois.</p>
-    <section class="panel">
-      <h2>Mes tâches</h2>
-      <form id="taskForm">
-        <input id="taskInput" placeholder="Ex. Faire les courses..." required>
-        <button type="submit">Ajouter</button>
-      </form>
-      <p class="stats" id="stats">0 tâche</p>
-      <ul id="taskList"></ul>
-      <button id="clearDone" type="button" class="delete">Supprimer les tâches terminées</button>
-    </section>
-  </main>
-  <script>
-    const form = document.getElementById('taskForm');
-    const input = document.getElementById('taskInput');
-    const list = document.getElementById('taskList');
-    const stats = document.getElementById('stats');
-    let tasks = [];
-    try {
-      tasks = JSON.parse(localStorage.getItem('ma-todo-tasks') || '[]');
-      if (!Array.isArray(tasks)) tasks = [];
-    } catch (e) { tasks = []; }
+<main>
+<h1>✨ Ma To-Do</h1>
+<p class="muted">Organise tes journées, une tâche à la fois.</p>
 
-    function save() {
-      try { localStorage.setItem('ma-todo-tasks', JSON.stringify(tasks)); }
-      catch (e) {}
-    }
+<section class="panel">
+<h2>📊 Ma progression</h2>
+<div class="stats">
+<div class="stat"><strong id="total">0</strong><span>Total</span></div>
+<div class="stat"><strong id="left">0</strong><span>À faire</span></div>
+<div class="stat"><strong id="doneCount">0</strong><span>Terminées</span></div>
+</div>
+<div class="track"><div id="bar"></div></div>
+<p id="percent" class="muted">0 % terminé</p>
+</section>
 
-    function render() {
-      list.replaceChildren();
-      const remaining = tasks.filter(t => !t.done).length;
-      stats.textContent = remaining + ' tâche(s) restante(s) · ' +
-        tasks.length + ' au total';
+<section class="panel">
+<h2>➕ Ajouter une tâche</h2>
+<form id="form">
+<label for="name">Nom de la tâche</label>
+<input id="name" placeholder="Ex. Faire les courses" maxlength="180" required>
+<div class="fields">
+<div><label for="date">Date</label><input id="date" type="date"></div>
+<div><label for="time">Heure</label><input id="time" type="time"></div>
+<div>
+<label for="category">Catégorie</label>
+<select id="category">
+<option>Personnel</option><option>Travail</option><option>Maison</option>
+<option>Courses</option><option>Études</option><option>Santé</option><option>Autre</option>
+</select>
+</div>
+</div>
+<button type="submit">Ajouter la tâche</button>
+</form>
+</section>
 
-      if (tasks.length === 0) {
-        const message = document.createElement('li');
-        message.className = 'empty';
-        message.textContent = 'Aucune tâche pour le moment. Ajoute la première !';
-        list.appendChild(message);
-      }
+<section class="panel">
+<h2>📝 Mes tâches</h2>
+<div class="filters">
+<select id="catFilter">
+<option value="Toutes">Toutes catégories</option>
+<option>Personnel</option><option>Travail</option><option>Maison</option>
+<option>Courses</option><option>Études</option><option>Santé</option><option>Autre</option>
+</select>
+<select id="statusFilter">
+<option value="Toutes">Toutes tâches</option><option value="À faire">À faire</option><option value="Terminées">Terminées</option>
+</select>
+</div>
+<div id="list"></div>
+<button id="clear" type="button" class="delete">Supprimer les tâches terminées</button>
+</section>
+<p class="muted">Les tâches sont enregistrées dans ce navigateur.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const KEY='ma-todo-tasks';
+let tasks=[];
+try{
+ const data=JSON.parse(localStorage.getItem(KEY)||'[]');
+ if(Array.isArray(data)) tasks=data.map(t=>({
+ id:t.id??(Date.now()+Math.random()),
+ text:String(t.text||''),done:Boolean(t.done),
+ date:t.date||'',time:t.time||'',category:t.category||'Personnel'
+ })).filter(t=>t.text);
+}catch(e){tasks=[]}
 
-      tasks.forEach(task => {
-        const item = document.createElement('li');
-        if (task.done) item.classList.add('done');
-
-        const check = document.createElement('input');
-        check.type = 'checkbox';
-        check.checked = task.done;
-        check.setAttribute('aria-label', 'Marquer comme terminée');
-        check.addEventListener('change', () => {
-          task.done = check.checked;
-          save();
-          render();
-        });
-
-        const label = document.createElement('span');
-        label.textContent = task.text;
-
-        const remove = document.createElement('button');
-        remove.textContent = 'Supprimer';
-        remove.className = 'delete';
-        remove.type = 'button';
-        remove.addEventListener('click', () => {
-          tasks = tasks.filter(t => t.id !== task.id);
-          save();
-          render();
-        });
-
-        item.append(check, label, remove);
-        list.appendChild(item);
-      });
-    }
-
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-      const text = input.value.trim();
-      if (!text) return;
-      tasks.push({ id: Date.now() + Math.random(), text, done: false });
-      save();
-      input.value = '';
-      render();
-      input.focus();
-    });
-
-    document.getElementById('clearDone').addEventListener('click', () => {
-      tasks = tasks.filter(t => !t.done);
-      save();
-      render();
-    });
-
-    render();
-  </script>
+function save(){
+ try{localStorage.setItem(KEY,JSON.stringify(tasks))}
+ catch(e){alert("L'enregistrement local a échoué.")}
+}
+function render(){
+ const total=tasks.length,finished=tasks.filter(t=>t.done).length;
+ const pct=total?Math.round(finished/total*100):0;
+ $('total').textContent=total;
+ $('left').textContent=total-finished;
+ $('doneCount').textContent=finished;
+ $('bar').style.width=pct+'%';
+ $('percent').textContent=pct+' % terminé';
+ const list=$('list');list.replaceChildren();
+ const cat=$('catFilter').value, status=$('statusFilter').value;
+ const shown=tasks.filter(t=>(cat==='Toutes'||t.category===cat)&&
+ (status==='Toutes'||(status==='À faire'&&!t.done)||(status==='Terminées'&&t.done)));
+ if(!shown.length){
+  const p=document.createElement('p');p.className='empty';
+  p.textContent=tasks.length?'Aucune tâche pour ce filtre.':'Aucune tâche pour le moment.';
+  list.appendChild(p);
+ }
+ shown.forEach(t=>{
+  const card=document.createElement('article');card.className='task'+(t.done?' done':'');
+  const top=document.createElement('div');top.className='top';
+  const check=document.createElement('input');check.type='checkbox';check.checked=t.done;
+  check.setAttribute('aria-label','Tâche terminée');
+  check.addEventListener('change',()=>{t.done=check.checked;save();render()});
+  const name=document.createElement('span');name.className='taskname';name.textContent=t.text;
+  top.append(check,name);card.appendChild(top);
+  const tag=document.createElement('span');tag.className='tag';tag.textContent=t.category;card.appendChild(tag);
+  if(t.date||t.time){
+   const meta=document.createElement('div');meta.className='meta';
+   let s='📅 ';
+   if(t.date){const d=t.date.split('-');s+=d.length===3?d[2]+'/'+d[1]+'/'+d[0]:t.date}
+   else s+='Date non précisée';
+   if(t.time)s+=' · 🕒 '+t.time;
+   meta.textContent=s;card.appendChild(meta);
+  }
+  const del=document.createElement('button');del.className='delete';del.textContent='Supprimer';
+  del.addEventListener('click',()=>{tasks=tasks.filter(x=>x.id!==t.id);save();render()});
+  card.appendChild(del);list.appendChild(card);
+ });
+}
+$('form').addEventListener('submit',e=>{
+ e.preventDefault();const text=$('name').value.trim();if(!text)return;
+ tasks.push({id:Date.now()+Math.random(),text,done:false,date:$('date').value,time:$('time').value,category:$('category').value});
+ save();$('name').value='';$('date').value='';$('time').value='';$('category').value='Personnel';render();
+});
+$('catFilter').addEventListener('change',render);
+$('statusFilter').addEventListener('change',render);
+$('clear').addEventListener('click',()=>{tasks=tasks.filter(t=>!t.done);save();render()});
+render();
+</script>
 </body>
 </html>
